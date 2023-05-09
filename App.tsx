@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   NativeBaseProvider,
   Badge,
   Button,
-  Tooltip,
-  Popover,
   Pressable,
+  useToast,
 } from "native-base";
 import {
   View,
@@ -20,6 +19,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Shadow } from "react-native-shadow-2";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/Ionicons";
+import axios from "axios";
 
 const Tab = createBottomTabNavigator();
 
@@ -64,24 +64,17 @@ const Stack = createNativeStackNavigator();
 const width = Dimensions.get("window").width;
 
 function HomeScreen() {
+  const toast = useToast();
+
   const [loading, setLoading] = useState(false);
+  const [vidoes, setVideos] = useState([]);
+  useEffect(() => {
+    axios.get("http://192.168.18.8:3000/videos").then(resp => {
+      setVideos(resp.data);
+    });
+  }, []);
 
-  const DATA = [
-    {
-      id: "bd7acbea-c1b1-46c2-aed5-3ad53abb28ba",
-      title: "摇曳露营 摇曳露营 摇曳露营",
-    },
-    {
-      id: "3ac68afc-c605-48d3-a4f8-fbd91aa97f63",
-      title: "Second Item",
-    },
-    {
-      id: "58694a0f-3da1-471f-bd96-145571e29d72",
-      title: "Third Item",
-    },
-  ];
-
-  const Item = ({ title }) => (
+  const Item = ({ title, cover }) => (
     <View style={styles.item}>
       <Shadow
         style={styles.video}
@@ -89,39 +82,33 @@ function HomeScreen() {
         startColor="#00000008"
         offset={[2, 2]}
       >
-        <Popover
-          placement="bottom"
-          trigger={triggerProps => {
-            return (
-              <View style={styles.cover}>
-                <Pressable {...triggerProps}>
-                  <Image
-                    style={{ width: "100%", height: "100%" }}
-                    source={{
-                      uri: "https://gd-hbimg.huaban.com/ffe2125f49120523e3ce6c653c3f730277b2d62b1b766-KftMJD_fw240webp",
-                    }}
-                  ></Image>
-                </Pressable>
-              </View>
-            );
-          }}
-        >
-          <Popover.Content>
-            <Popover.Body _text={{ fontSize: 10 }}>{title}</Popover.Body>
-          </Popover.Content>
-        </Popover>
-
+        <View style={styles.cover}>
+          <Pressable
+            onPress={() => toast.show({ description: title, placement: "top" })}
+          >
+            <Image
+              style={{ width: "100%", height: "100%" }}
+              source={{
+                uri: cover,
+              }}
+            ></Image>
+          </Pressable>
+        </View>
         <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
           {title}
         </Text>
-
-        <Button
-          size={"xs"}
-          style={{ marginBottom: 5, marginHorizontal: 5 }}
-          onPress={() => console.log("hello world")}
+        <Button.Group
+          style={{ marginBottom: 5 }}
+          isAttached
+          mx={{
+            base: "auto",
+          }}
         >
-          标记完成
-        </Button>
+          <Button size="xs">已看完</Button>
+          <Button size="xs" variant="outline">
+            看一集
+          </Button>
+        </Button.Group>
         <View style={styles.tag}>
           <Badge colorScheme="danger">bilibili</Badge>
         </View>
@@ -132,9 +119,9 @@ function HomeScreen() {
   return (
     <FlatList
       style={styles.container}
-      data={DATA}
+      data={vidoes}
       numColumns={3}
-      renderItem={({ item }) => <Item title={item.title} />}
+      renderItem={({ item }) => <Item title={item.title} cover={item.cover} />}
       keyExtractor={item => item.id}
       ListFooterComponent={
         <Text style={{ textAlign: "center" }}>没有更多了</Text>
