@@ -20,6 +20,7 @@ import { Shadow } from "react-native-shadow-2";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
+import { LoadingButton } from "./components/LoadingButton";
 
 const Tab = createBottomTabNavigator();
 
@@ -74,7 +75,13 @@ function HomeScreen() {
     });
   }, []);
 
-  const Item = ({ title, cover }) => (
+  const addVideoHistory = async id => {
+    return await axios.put(`http://192.168.18.8:3000/videos/${id}`).then(() => {
+      toast.show({ description: "追番成功!", placement: "top" });
+    });
+  };
+
+  const Item = ({ id, title, cover }) => (
     <View style={styles.item}>
       <Shadow
         style={styles.video}
@@ -104,10 +111,14 @@ function HomeScreen() {
             base: "auto",
           }}
         >
-          <Button size="xs">已看完</Button>
-          <Button size="xs" variant="outline">
-            看一集
-          </Button>
+          <LoadingButton size="sm">已看完</LoadingButton>
+          <LoadingButton
+            size="sm"
+            variant="outline"
+            onPress={() => addVideoHistory(id)}
+          >
+            追一集
+          </LoadingButton>
         </Button.Group>
         <View style={styles.tag}>
           <Badge colorScheme="danger">bilibili</Badge>
@@ -121,7 +132,9 @@ function HomeScreen() {
       style={styles.container}
       data={vidoes}
       numColumns={3}
-      renderItem={({ item }) => <Item title={item.title} cover={item.cover} />}
+      renderItem={({ item }) => (
+        <Item title={item.title} cover={item.cover} id={item.id} />
+      )}
       keyExtractor={item => item.id}
       ListFooterComponent={
         <Text style={{ textAlign: "center" }}>没有更多了</Text>
